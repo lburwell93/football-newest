@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Football Picks Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b1021;
+      --card: #121837;
+      --accent: #4ade80;
+      --accent-2: #60a5fa;
+      --muted: #9ca3af;
+      --text: #f8fafc;
+      --border: rgba(255,255,255,0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: radial-gradient(circle at 20% 20%, rgba(76,29,149,0.25), transparent 25%),
+                  radial-gradient(circle at 80% 0%, rgba(34,197,94,0.18), transparent 22%),
+                  var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    header {
+      padding: 28px clamp(16px, 4vw, 52px) 12px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(24px, 3vw, 34px);
+      letter-spacing: -0.5px;
+    }
+    .pill {
+      padding: 10px 16px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-weight: 600;
+      color: #dbeafe;
+    }
+    main {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 18px;
+      padding: 0 clamp(16px, 4vw, 52px) 38px;
+    }
+    @media (max-width: 1100px) {
+      main { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px 18px 14px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+    }
+    .card h2, .card h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      letter-spacing: -0.3px;
+    }
+    .card h2 { font-size: 20px; }
+    .card h3 { font-size: 18px; }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    label {
+      display: block;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-size: 13px;
+      letter-spacing: 0.1px;
+    }
+    input, select, button, textarea {
+      font-family: inherit;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      outline: none;
+      transition: border 0.15s ease, background 0.15s ease;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+      background: rgba(255,255,255,0.07);
+    }
+    button {
+      background: linear-gradient(135deg, var(--accent), #22c55e);
+      color: #0f172a;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+    button:hover { transform: translateY(-1px); box-shadow: 0 10px 25px rgba(34,197,94,0.35); }
+    button.secondary {
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      box-shadow: none;
+      border: 1px solid var(--border);
+    }
+    .game-card {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0));
+      position: relative;
+      overflow: hidden;
+    }
+    .game-card:before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 20% 30%, rgba(96,165,250,0.18), transparent 45%),
+                  radial-gradient(circle at 80% 0%, rgba(52,211,153,0.18), transparent 40%);
+      opacity: 0.7;
+      pointer-events: none;
+    }
+    .game-card > * { position: relative; z-index: 1; }
+    .game-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .matchup {
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .league-tag {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid var(--border);
+      font-size: 12px;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .resource-row {
+      display: grid;
+      grid-template-columns: 24px 1.4fr repeat(4, 1fr) 36px;
+      gap: 10px;
+      align-items: center;
+      padding: 8px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+    }
+    .resource-row + .resource-row { margin-top: 6px; }
+    .drag-handle {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.08);
+      display: grid;
+      place-items: center;
+      cursor: grab;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .resource-row input, .resource-row select { width: 100%; }
+    .resource-row .delete {
+      background: rgba(248, 113, 113, 0.14);
+      color: #fecdd3;
+      border: 1px solid rgba(248, 113, 113, 0.3);
+      padding: 6px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .resource-row .delete:hover { background: rgba(248, 113, 113, 0.2); }
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 14px 0 8px;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .metric-box {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+    }
+    .metric-label { color: var(--muted); font-size: 13px; }
+    .metric-value { font-size: 20px; font-weight: 700; margin-top: 4px; }
+    .bar-track {
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-2), var(--accent));
+      width: 0;
+      transition: width 0.25s ease;
+    }
+    .list-inline { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0 0; padding: 0; list-style: none; }
+    .chip {
+      padding: 6px 10px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid var(--border);
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .muted { color: var(--muted); }
+    .empty { color: var(--muted); font-style: italic; }
+    .stacked {
+      display: grid;
+      gap: 6px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Football Picks Tracker</h1>
+      <div class="pill">Track expert predictions for NCAA & NFL at a glance</div>
+    </div>
+    <div class="stacked" style="max-width: 420px;">
+      <div class="muted" style="font-size: 13px;">Add a matchup, drag resources to reorder, capture who they pick, their probabilities, margins, and spread calls—all in one board.</div>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="section-title">
+        <h2>Add a Game</h2>
+        <button id="addGameBtn">Add Game</button>
+      </div>
+      <div class="grid-2">
+        <div>
+          <label for="league">League</label>
+          <select id="league">
+            <option value="NCAA">NCAA</option>
+            <option value="NFL">NFL</option>
+          </select>
+        </div>
+        <div>
+          <label for="spread">Vegas Spread (optional, home perspective)</label>
+          <input type="number" step="0.5" id="spread" placeholder="-3.5 means home favored by 3.5" />
+        </div>
+        <div>
+          <label for="homeTeam">Home Team</label>
+          <input type="text" id="homeTeam" placeholder="e.g., Oregon" />
+        </div>
+        <div>
+          <label for="awayTeam">Away Team</label>
+          <input type="text" id="awayTeam" placeholder="e.g., USC" />
+        </div>
+      </div>
+      <div class="section-title" style="margin-top: 14px;">
+        <h3>Default Resources</h3>
+        <button class="secondary" id="addResourceBtn">Add Resource</button>
+      </div>
+      <div id="resourceList" class="stacked"></div>
+    </section>
+
+    <section class="card">
+      <div class="section-title">
+        <h2>Games Board</h2>
+        <div class="muted" style="font-size: 13px;">Click a value to edit. Drag the handle to reorder resources per game.</div>
+      </div>
+      <div id="gamesContainer"></div>
+    </section>
+  </main>
+
+  <template id="resource-row-template">
+    <div class="resource-row" draggable="true">
+      <div class="drag-handle" title="Drag to reorder">☰</div>
+      <div class="muted resource-name"></div>
+      <select class="winner">
+        <option value="">Winner</option>
+        <option value="home">Home</option>
+        <option value="away">Away</option>
+      </select>
+      <input type="number" class="homeProb" min="0" max="100" step="1" placeholder="Home %" />
+      <input type="number" class="awayProb" min="0" max="100" step="1" placeholder="Away %" />
+      <input type="number" class="margin" step="0.5" placeholder="Margin" />
+      <select class="cover">
+        <option value="">Cover?</option>
+        <option value="home">Home</option>
+        <option value="away">Away</option>
+      </select>
+      <button class="delete" title="Remove resource">✕</button>
+    </div>
+  </template>
+
+  <script>
+    const defaultResources = [
+      { name: 'ESPN FPI', scope: 'Both' },
+      { name: 'PFF Power Ratings', scope: 'Both' },
+      { name: 'Action Network', scope: 'Both' },
+      { name: 'Sharp Bettor', scope: 'NFL' },
+      { name: 'Athlon Sports', scope: 'NCAA' },
+      { name: 'CBS Sports', scope: 'Both' }
+    ];
+
+    const games = [];
+
+    const resourceListEl = document.getElementById('resourceList');
+    const gamesContainer = document.getElementById('gamesContainer');
+
+    function renderResourceDefaults() {
+      resourceListEl.innerHTML = '';
+      defaultResources.forEach((r, idx) => {
+        const row = document.createElement('div');
+        row.className = 'resource-row';
+        row.dataset.index = idx;
+        row.draggable = true;
+        row.innerHTML = `
+          <div class="drag-handle">☰</div>
+          <div class="muted">${r.name}</div>
+          <div class="chip" style="justify-self:flex-start;">${r.scope}</div>
+          <div class="muted" style="grid-column: span 4;">Auto-populates for every new game</div>
+          <button class="delete" title="Remove">✕</button>
+        `;
+        row.querySelector('.delete').addEventListener('click', () => {
+          defaultResources.splice(idx, 1);
+          renderResourceDefaults();
+        });
+        addDragHandlers(row, defaultResources, renderResourceDefaults);
+        resourceListEl.appendChild(row);
+      });
+    }
+
+    function addDragHandlers(row, arrayRef, rerender) {
+      row.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', row.dataset.index);
+        row.classList.add('dragging');
+      });
+      row.addEventListener('dragend', () => row.classList.remove('dragging'));
+      row.addEventListener('dragover', (e) => e.preventDefault());
+      row.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const from = Number(e.dataTransfer.getData('text/plain'));
+        const to = Number(row.dataset.index);
+        if (from === to) return;
+        const [moved] = arrayRef.splice(from, 1);
+        arrayRef.splice(to, 0, moved);
+        rerender();
+        games.forEach(renderGameCard);
+      });
+    }
+
+    function createResourcePrediction(resourceName) {
+      return { name: resourceName, winner: '', homeProb: '', awayProb: '', margin: '', cover: '' };
+    }
+
+    function addGame() {
+      const home = document.getElementById('homeTeam').value.trim();
+      const away = document.getElementById('awayTeam').value.trim();
+      if (!home || !away) {
+        alert('Please provide both home and away team names.');
+        return;
+      }
+      const league = document.getElementById('league').value;
+      const spreadVal = document.getElementById('spread').value;
+      const newGame = {
+        id: crypto.randomUUID(),
+        league,
+        homeTeam: home,
+        awayTeam: away,
+        spread: spreadVal ? Number(spreadVal) : null,
+        resources: defaultResources.map(r => createResourcePrediction(r.name))
+      };
+      games.unshift(newGame);
+      renderGames();
+      document.getElementById('homeTeam').value = '';
+      document.getElementById('awayTeam').value = '';
+      document.getElementById('spread').value = '';
+    }
+
+    function renderGames() {
+      gamesContainer.innerHTML = '';
+      if (!games.length) {
+        gamesContainer.innerHTML = '<p class="empty">Add a matchup to start tracking picks.</p>';
+        return;
+      }
+      games.forEach(renderGameCard);
+    }
+
+    function renderGameCard(game) {
+      let card = document.querySelector(`[data-game-id="${game.id}"]`);
+      if (!card) {
+        card = document.createElement('div');
+        card.className = 'game-card';
+        card.dataset.gameId = game.id;
+        gamesContainer.appendChild(card);
+      }
+      card.innerHTML = '';
+
+      const header = document.createElement('div');
+      header.className = 'game-header';
+      header.innerHTML = `
+        <div>
+          <div class="league-tag">${game.league}</div>
+          <div class="matchup">${game.awayTeam} @ ${game.homeTeam}</div>
+          ${game.spread !== null ? `<div class="muted" style="font-size:13px;">Spread: ${game.spread > 0 ? '+' : ''}${game.spread} (home perspective)</div>` : ''}
+        </div>
+        <div class="stacked" style="gap:6px;">
+          <button class="secondary" data-add-resource>Add resource</button>
+        </div>
+      `;
+      card.appendChild(header);
+
+      const list = document.createElement('div');
+      game.resources.forEach((res, idx) => {
+        const tmpl = document.getElementById('resource-row-template');
+        const row = tmpl.content.firstElementChild.cloneNode(true);
+        row.dataset.index = idx;
+        row.querySelector('.resource-name').textContent = res.name;
+        row.querySelector('.winner').value = res.winner;
+        row.querySelector('.homeProb').value = res.homeProb;
+        row.querySelector('.awayProb').value = res.awayProb;
+        row.querySelector('.margin').value = res.margin;
+        row.querySelector('.cover').value = res.cover;
+
+        ['winner','homeProb','awayProb','margin','cover'].forEach(field => {
+          row.querySelector('.'+field).addEventListener('input', (e) => {
+            const value = e.target.value;
+            if (['homeProb','awayProb','margin'].includes(field)) {
+              game.resources[idx][field] = value === '' ? '' : Number(value);
+            } else {
+              game.resources[idx][field] = value;
+            }
+            renderAggregates(card, game);
+          });
+        });
+
+        row.querySelector('.delete').addEventListener('click', () => {
+          game.resources.splice(idx, 1);
+          renderGameCard(game);
+        });
+
+        addDragHandlers(row, game.resources, () => renderGameCard(game));
+        list.appendChild(row);
+      });
+
+      card.appendChild(list);
+      renderAggregates(card, game);
+
+      header.querySelector('[data-add-resource]').addEventListener('click', () => {
+        const name = prompt('Resource name');
+        if (name) {
+          game.resources.push(createResourcePrediction(name.trim()));
+          renderGameCard(game);
+        }
+      });
+    }
+
+    function renderAggregates(card, game) {
+      const existing = card.querySelector('.metrics-block');
+      if (existing) existing.remove();
+
+      const picks = { home: 0, away: 0 };
+      const cover = { home: 0, away: 0 };
+      const probs = { home: [], away: [] };
+      const margins = { home: [], away: [] };
+
+      game.resources.forEach(res => {
+        if (res.winner === 'home') picks.home++;
+        if (res.winner === 'away') picks.away++;
+        if (res.cover === 'home') cover.home++;
+        if (res.cover === 'away') cover.away++;
+        if (res.homeProb !== '' && !Number.isNaN(Number(res.homeProb))) probs.home.push(Number(res.homeProb));
+        if (res.awayProb !== '' && !Number.isNaN(Number(res.awayProb))) probs.away.push(Number(res.awayProb));
+        if (res.margin !== '' && res.winner) {
+          const marginVal = Number(res.margin);
+          if (!Number.isNaN(marginVal)) {
+            margins[res.winner].push(marginVal);
+          }
+        }
+      });
+
+      const avg = arr => arr.length ? (arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(1) : '—';
+
+      const metricsBlock = document.createElement('div');
+      metricsBlock.className = 'metrics-block';
+      metricsBlock.innerHTML = `
+        <div class="section-title" style="margin-top:12px;">
+          <h3>Edge snapshot</h3>
+          <div class="muted" style="font-size:12px;">Based only on filled fields</div>
+        </div>
+        <div class="metrics">
+          <div class="metric-box">
+            <div class="metric-label">Pick count</div>
+            <div class="metric-value">${picks.away} vs ${picks.home}</div>
+            <div class="bar-track"><div class="bar" style="width:${(picks.home + picks.away) ? (picks.home/(picks.home+picks.away))*100 : 0}%"></div></div>
+            <div class="muted" style="font-size:12px; margin-top:6px;">Away vs Home</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Avg win probability</div>
+            <div class="metric-value">${avg(probs.away)}% / ${avg(probs.home)}%</div>
+            <div class="muted" style="font-size:12px;">Away / Home</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Avg predicted margin</div>
+            <div class="metric-value">${avg([...margins.home, ...margins.away]) === '—' ? '—' : avg([...margins.home, ...margins.away]) + ' pts'}</div>
+            <div class="muted" style="font-size:12px;">By predicted winner</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Cover picks</div>
+            <div class="metric-value">${cover.away} vs ${cover.home}</div>
+            <div class="muted" style="font-size:12px;">Away vs Home</div>
+          </div>
+        </div>
+        <div class="grid-2" style="margin-top:12px;">
+          <div>
+            <div class="metric-label">Margins when ${game.homeTeam} picked</div>
+            ${renderMarginList(margins.home)}
+          </div>
+          <div>
+            <div class="metric-label">Margins when ${game.awayTeam} picked</div>
+            ${renderMarginList(margins.away)}
+          </div>
+        </div>
+      `;
+
+      card.appendChild(metricsBlock);
+    }
+
+    function renderMarginList(arr) {
+      if (!arr.length) return '<div class="empty">No margins yet</div>';
+      const sorted = [...arr].sort((a,b)=>a-b);
+      return `<ul class="list-inline">${sorted.map(v => `<li class="chip">${v > 0 ? '+'+v : v} pts</li>`).join('')}</ul>`;
+    }
+
+    document.getElementById('addGameBtn').addEventListener('click', addGame);
+    document.getElementById('addResourceBtn').addEventListener('click', () => {
+      const name = prompt('New resource name');
+      if (!name) return;
+      const scope = prompt('Scope (NCAA, NFL, Both)?', 'Both') || 'Both';
+      defaultResources.push({ name: name.trim(), scope: scope.trim() });
+      renderResourceDefaults();
+      games.forEach(game => {
+        game.resources.push(createResourcePrediction(name.trim()));
+        renderGameCard(game);
+      });
+    });
+
+    // Seed with sample games for inspiration
+    function seedDemo() {
+      document.getElementById('homeTeam').value = 'Philadelphia Eagles';
+      document.getElementById('awayTeam').value = 'Dallas Cowboys';
+      document.getElementById('league').value = 'NFL';
+      document.getElementById('spread').value = '-2.5';
+      addGame();
+      const nfl = games[0];
+      nfl.resources[0].winner = 'home'; nfl.resources[0].homeProb = 62; nfl.resources[0].awayProb = 38; nfl.resources[0].margin = 6; nfl.resources[0].cover = 'home';
+      nfl.resources[1].winner = 'away'; nfl.resources[1].homeProb = 48; nfl.resources[1].awayProb = 52; nfl.resources[1].margin = 3; nfl.resources[1].cover = 'away';
+      nfl.resources[2].winner = 'home'; nfl.resources[2].homeProb = 58; nfl.resources[2].awayProb = 42; nfl.resources[2].margin = 4.5; nfl.resources[2].cover = 'home';
+
+      document.getElementById('homeTeam').value = 'Oregon Ducks';
+      document.getElementById('awayTeam').value = 'USC Trojans';
+      document.getElementById('league').value = 'NCAA';
+      document.getElementById('spread').value = '-6.5';
+      addGame();
+      const ncaa = games[0];
+      ncaa.resources[0].winner = 'home'; ncaa.resources[0].homeProb = 71; ncaa.resources[0].awayProb = 29; ncaa.resources[0].margin = 9; ncaa.resources[0].cover = 'home';
+      ncaa.resources[3].winner = 'away'; ncaa.resources[3].homeProb = 45; ncaa.resources[3].awayProb = 55; ncaa.resources[3].margin = 2.5; ncaa.resources[3].cover = 'away';
+      ncaa.resources[4].winner = 'home'; ncaa.resources[4].homeProb = 68; ncaa.resources[4].awayProb = 32; ncaa.resources[4].margin = 7.5; ncaa.resources[4].cover = 'home';
+
+      renderGames();
+    }
+
+    renderResourceDefaults();
+    seedDemo();
+  </script>
+</body>
+</html>
